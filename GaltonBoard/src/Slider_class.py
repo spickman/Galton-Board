@@ -11,13 +11,15 @@ class Slider(object):
         self.process_kwargs(kwargs)
         self.setup_bars()
         self.update_trigger()
+        self.active_colour = pg.Color(0, 128, 255, 0)
 
     def process_kwargs(self, kwargs):
         defaults = {'id': None,
-                    'color': pg.Color('grey'),
-                    'trigger_width': 10,
+                    'colours': (pg.Color('grey'), pg.Color('darkgrey')),
+                    'trigger_width': 15,
                     'bar_height': int(self.rect.height/6),
-                    'value': 0.4
+                    'value': 0.4,
+                    'command': None
                     }
         for kwarg in kwargs:
             if kwarg in defaults:
@@ -35,24 +37,26 @@ class Slider(object):
             self.active = False
 
     def execute(self):
-        pass
+        if self.command:
+            self.command()
 
     def update_value(self):
         if self.active:
-            self.value = (pg.mouse.get_pos()[0] - self.rect.x - self.trigger_rect.width/2) / self.rect.width
+            self.value = (pg.mouse.get_pos()[0] - self.rect.x - self.trigger_width/2) / (self.rect.width - self.trigger_width)
             if self.value > 1:
                 self.value = 1
             elif self.value < 0:
                 self.value = 0
+            self.execute()
 
     def update_trigger(self):
-        self.trigger_rect = pg.Rect((int(self.value*self.rect.width - self.trigger_width/2), 0, self.trigger_width,
+        self.trigger_rect = pg.Rect((int(self.value*(self.rect.width-self.trigger_width)), 0, self.trigger_width,
                                      self.rect.height))
 
     def setup_bars(self):
         self.rendered_bar = pg.Surface((self.rect.width, self.rect.height))
         #self.rendered_bar.fill(pg.Color('white')) # For Testing Only
-        pg.draw.rect(self.rendered_bar, pg.Color('red'), (0, int(self.rect.height/2 - self.bar_height/2),
+        pg.draw.rect(self.rendered_bar, self.colours[0], (0, int(self.rect.height/2 - self.bar_height/2),
                                                           self.rect.width, self.bar_height))
 
     def update(self):
@@ -63,7 +67,7 @@ class Slider(object):
     def draw(self, surface):
         self.rendered = pg.Surface((self.rect.width, self.rect.height))
         self.rendered.blit(self.rendered_bar, (0, 0))
-        pg.draw.rect(self.rendered, pg.Color('blue'), self.trigger_rect)
+        pg.draw.rect(self.rendered, self.active_colour if self.active else self.colours[1], self.trigger_rect)
         if self.rendered:
             surface.blit(self.rendered, (self.rect.x, self.rect.y))
 

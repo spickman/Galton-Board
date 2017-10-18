@@ -55,7 +55,7 @@ class TextBox(object):
 
     def execute(self):
         if self.command:
-            self.command(self.final)
+            self.command(self.final, set_value=True)
         self.active = not self.inactive_on_enter
         if self.clear_on_enter:
             self.buffer = []
