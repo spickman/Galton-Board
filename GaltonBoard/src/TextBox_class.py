@@ -41,7 +41,7 @@ class TextBox(object):
                 raise KeyError("InputBox accepts no keyword {}.".format(kwarg))
         self.__dict__.update(defaults)
 
-    def get_event(self,event):
+    def get_event(self, event):
         if event.type == pg.KEYDOWN and self.active:
             if event.key in (pg.K_RETURN,pg.K_KP_ENTER):
                 self.execute()
@@ -55,7 +55,7 @@ class TextBox(object):
 
     def execute(self):
         if self.command:
-            self.command(self.final, set_value=True)
+            self.command(float(self.final)/100 if self.percentage else self.final, set_value=True, percent=self.percentage)
         self.active = not self.inactive_on_enter
         if self.clear_on_enter:
             self.buffer = []

@@ -15,7 +15,7 @@ class Slider(object):
 
     def process_kwargs(self, kwargs):
         defaults = {'id': None,
-                    'colours': (pg.Color('grey'), pg.Color('darkgrey')),
+                    'colours': (pg.Color(180, 180, 180, 0), pg.Color(140, 140, 140, 0)),
                     'trigger_width': 15,
                     'bar_height': int(self.rect.height/6),
                     'value': 0.4,
@@ -55,7 +55,6 @@ class Slider(object):
 
     def setup_bars(self):
         self.rendered_bar = pg.Surface((self.rect.width, self.rect.height))
-        #self.rendered_bar.fill(pg.Color('white')) # For Testing Only
         pg.draw.rect(self.rendered_bar, self.colours[0], (0, int(self.rect.height/2 - self.bar_height/2),
                                                           self.rect.width, self.bar_height))
 

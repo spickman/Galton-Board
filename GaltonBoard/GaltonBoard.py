@@ -16,6 +16,7 @@ class App:
     x = 10
     y = 10
 
+
     def __init__(self):
         self.menu_height = 100
         self.dt = 0.01
@@ -25,7 +26,7 @@ class App:
         self._display_surf = None
         self._board_surf = None
         self.number_of_levels = 20
-
+        self.cp = ColourPalette()
         self.pin_size = 8
 
         tmp_ball = GaltonBall(0)
@@ -49,12 +50,12 @@ class App:
         self.font = pygame.font.Font(None, 24)
         self.font2 = pygame.font.SysFont("Consolas", 12, )
         self.number_of_results_text = self.font.render('Total Balls : ' + str(self.number_of_results), True,
-                                                       pygame.Color(255, 255, 255, 0))
+                                                       self.cp.white)
         self.bin_text = self.font2.render(''.join([str(tmp_bin.value) for tmp_bin in self.bins]), True,
-                                          pygame.Color(255, 255, 255, 0))
+                                          self.cp.white)
 
         self.status_bar = StatusBar(pop_time=2)
-        self.status_text = self.font.render('', True, pygame.Color(120, 120, 120, 0))
+        self.status_text = self.font.render('', True, self.cp.grey)
 
         self.UIComponents = dict()
         self.UIComponents['ball_input'] = TextBox((475, self.board_height + 40, 50, 20),
@@ -76,36 +77,35 @@ class App:
                                                 clear_on_enter=False, inactive_on_enter=False, percentage=True,
                                                 label="Ball speed")
 
-        self.UIComponents['ResetButton'] = Button((675, self.board_height + 10, 100, 20), command=self.reset_command,
+        self.UIComponents['ResetButton'] = Button((800, self.board_height + 40, 100, 20), command=self.reset_command,
                                                   label="Reset")
         self.UIComponents['PauseButton'] = Button((800, self.board_height + 10, 100, 20), command=self.pause_command,
                                                   label="Pause", latching_label="Continue",
-                                                  active_color=pygame.Color(180, 5, 5, 0))
-        self.UIComponents['Preset1Button'] = Button((675, self.board_height + 40, 100, 20),
+                                                  active_color=self.cp.red)
+        self.UIComponents['Preset1Button'] = Button((675, self.board_height + 10, 100, 20),
                                                     command=self.preset1_command, label="Preset1")
-        self.UIComponents['Preset2Button'] = Button((675, self.board_height + 70, 100, 20),
+        self.UIComponents['Preset2Button'] = Button((675, self.board_height + 40, 100, 20),
                                                     command=self.preset2_command,
                                                     label="Preset2")
-        self.UIComponents['Preset3Button'] = Button((675, self.board_height + 100, 100, 20),
+        self.UIComponents['Preset3Button'] = Button((675, self.board_height + 70, 100, 20),
                                                     command=self.preset3_command, label="Preset3")
         self.UIComponents['SaveDataButton'] = Button((800, self.board_height + 70, 100, 20),
                                                      command=self.save_data_command, label="Save Data")
         self.UIComponents['level_slider'] = Slider((550, self.board_height + 10, 100, 20),
-                                                   command=self.level_slider_command,
-                                                   value=(self.number_of_levels - 1) / 39)
+                                                   command=self.level_slider_command)
         self.UIComponents['ball_slider'] = Slider((550, self.board_height + 40, 100, 20),
-                                                  command=self.ball_slider_command,
-                                                  value=(self.number_of_balls - 1) / 999)
+                                                  command=self.ball_slider_command)
         self.UIComponents['dt_slider'] = Slider((550, self.board_height + 70, 100, 20),
-                                                command=self.dt_slider_command, value=1 - (self.dt - 0.002) / 0.028)
+                                                command=self.dt_slider_command)
         self.UIComponents['speed_slider'] = Slider((550, self.board_height + 100, 100, 20),
-                                                   command=self.speed_slider_command, value=self.delay_time / 99)
+                                                   command=self.speed_slider_command)
 
         self.change_dt(-1)
         self.change_number_of_balls(-1)
         self.change_number_of_levels(-1)
         self.change_speed_of_balls(-1)
         self.load_preset_labels()
+        self.preset3_command()
         self.setup_board()
 
     def pause_command(self):
@@ -167,14 +167,12 @@ class App:
         config = configparser.ConfigParser()
         config.read(filename)
         try:
-            self.change_number_of_balls(self.config_section_map(config, "SectionOne")['number_of_balls'],
-                                        set_value=True)
-            self.change_dt(self.config_section_map(config, "SectionOne")['speed_of_balls%'], set_value=True)
-            self.change_speed_of_balls(self.config_section_map(config, "SectionOne")['ball_delay%'], set_value=True)
-            self.change_number_of_levels(self.config_section_map(config, "SectionOne")['number_of_levels'],
-                                         set_value=True)
+            self.change_number_of_balls(float(self.config_section_map(config, "SectionOne")['number_of_balls']),set_value=True)
+            self.change_dt(float(self.config_section_map(config, "SectionOne")['speed_of_balls%']), set_value=True, percent=True)
+            self.change_speed_of_balls(float(self.config_section_map(config, "SectionOne")['ball_delay%']), set_value=True, percent=True)
+            self.change_number_of_levels(float(self.config_section_map(config, "SectionOne")['number_of_levels']),set_value=True)
         except Exception as e:
-            print(e)
+            print("load_preset : ", e)
             self.status_bar.add_item('Bad config file : ' + filename)
 
     def load_preset_labels(self):
@@ -209,98 +207,70 @@ class App:
     def change_dt(self, num, set_value=False, percent=False):
         dt_min = 0.002
         dt_max = 0.03
-        dt_range = dt_max - dt_min
-        if percent:
-            num *= 100
-        try:
-            if 0 <= int(num) <= 100:
-                self.dt = dt_max - dt_range * float(num) / 100
-                if set_value:
-                    self.UIComponents['dt_input'].buffer = list(str(int(num)))
-                    self.UIComponents['dt_slider'].value = float(float(num) / 100.0)
-            else:
-                self.UIComponents['dt_input'].buffer = list(str(int((dt_max - self.dt) * 100 / dt_range)))
-        except Exception as e:
-            print(e)
-            self.UIComponents['dt_input'].buffer = list(str(int((dt_max - self.dt) * 100 / dt_range)))
-        finally:
-            pass
+        value_to_set = self.on_change('dt_input', 'dt_slider', dt_min, dt_max, num, percent=percent, display_percent=True, set_value=set_value, reverse=True)
+        if value_to_set is not None:
+            self.dt = value_to_set
 
     def change_number_of_balls(self, num, set_value=False, percent=False):
         number_of_balls_max = 1000
         number_of_balls_min = 0
-        if percent:
-            num *= (number_of_balls_max - number_of_balls_min)
-            num += number_of_balls_min
-        try:
-            if number_of_balls_min <= int(num) <= number_of_balls_max:
-                if self.paused:
-                    self.unpause_number_of_balls = int(num)
-                else:
-                    self.number_of_balls = int(num)
-                if set_value:
-                    self.UIComponents['ball_input'].buffer = list(str(int(num)))
-                    self.UIComponents['ball_slider'].value = (float(num) - number_of_balls_min) \
-                                                             / (number_of_balls_max - number_of_balls_min)
+        value_to_set = self.on_change('ball_input', 'ball_slider', number_of_balls_min, number_of_balls_max, num, percent=percent, set_value=set_value)
+        if value_to_set is not None:
+            if self.paused:
+                self.number_of_balls = 0
             else:
-                self.UIComponents['ball_input'].buffer = list(str(int(self.number_of_balls)))
-        except Exception as e:
-            print(e)
-            self.UIComponents['ball_input'].uffer = list(str(int(self.number_of_balls)))
-        finally:
-            pass
+                self.number_of_balls = int(value_to_set)
 
     def change_speed_of_balls(self, num, set_value=False, percent=False):
         speed_of_balls_min = 0
-        speed_of_balls_max = 99
-        speed_of_balls_range = speed_of_balls_max - speed_of_balls_min
-        if percent:
-            num *= 100
-        try:
-            if 0 <= int(num) <= 100:
-                self.delay_time = speed_of_balls_min + speed_of_balls_range * float(num) / 100
-                if set_value:
-                    self.UIComponents['speed_input'].buffer = list(str(int(num)))
-                    self.UIComponents['speed_slider'].value = float(float(num) / 100)
-            else:
-                self.UIComponents['speed_input'].buffer = \
-                    list(str(int((speed_of_balls_min + self.delay_time) * 100 / speed_of_balls_range)))
-        except Exception as e:
-            print(e)
-            self.UIComponents['speed_input'].buffer = \
-                list(str(int((speed_of_balls_min + self.delay_time) * 100 / speed_of_balls_range)))
-        finally:
-            pass
+        speed_of_balls_max = 100
+        value_to_set = self.on_change('speed_input', 'speed_slider', speed_of_balls_min, speed_of_balls_max, num, percent=percent, set_value=set_value)
+        if value_to_set is not None:
+            self.delay_time = value_to_set
 
     def change_number_of_levels(self, num, set_value=False, percent=False):
         number_of_levels_max = 40
         number_of_levels_min = 1
-        if percent:
-            num *= (number_of_levels_max - number_of_levels_min)
-            num += number_of_levels_min
-        try:
-            if number_of_levels_min <= int(num) <= number_of_levels_max:
-                self.number_of_levels = int(num)
-                if self.number_of_levels <= 20:
-                    self.pin_size = 8
-                else:
-                    self.pin_size = 8 - int(5 - (40 - self.number_of_levels) / 5)
 
-                tmpball = GaltonBall(1)
-                self.total_radius = tmpball.radius + self.pin_size
-                self.reset_command()
-                if set_value:
-                    self.UIComponents['level_input'].buffer = list(str(int(num)))
-                    self.UIComponents['level_slider'].value = (float(num) - number_of_levels_min) / \
-                                                              (number_of_levels_max - number_of_levels_min)
-
+        value_to_set = self.on_change('level_input', 'level_slider', number_of_levels_min, number_of_levels_max, num, percent=percent, set_value=set_value)
+        if value_to_set is not None:
+            self.number_of_levels = int(value_to_set)
+            if self.number_of_levels <= 20:
+                self.pin_size = 8
             else:
-                self.UIComponents['level_input'].buffer = list(str(self.number_of_levels))
+                self.pin_size = 8 - int(5 - (40 - self.number_of_levels) / 5)
+
+            tmpball = GaltonBall(1)
+            self.total_radius = tmpball.radius + self.pin_size
+            self.reset_command()
+
+    def on_change(self, textbox, slider, minimum, maximum, value, percent=False, display_percent=False, set_value=False, reverse=False):
+        value_range = maximum - minimum
+        value_to_set = None
+        if percent:
+            value *= value_range
+            value += minimum
+        try:
+            if minimum <= float(value) <= maximum:
+                value_to_set = float(value)
+            elif float(value) < minimum:
+                value_to_set = minimum
+            elif float(value) > maximum:
+                value_to_set = maximum
+
+            if value_to_set is not None:
+                if set_value:
+                    if display_percent:
+                        self.UIComponents[textbox].buffer = list(str(int(round(100*(value_to_set-minimum)/value_range, 1))))
+                    else:
+                        self.UIComponents[textbox].buffer = list(str(int(value_to_set)))
+                    self.UIComponents[slider].value = float(float(value_to_set)-minimum)/value_range
+
         except Exception as e:
-            print(e)
-            self.UIComponents['level_input'].buffer = list(str(self.number_of_levels))
-        finally:
-            pass
+            print("on_change : ", e)
+        if reverse and value_to_set:
+            value_to_set = maximum - (value_to_set-minimum)
+        return value_to_set
 
     def setup_balls(self):
         self.balls = list()
@@ -338,24 +308,24 @@ class App:
         self._display_surf.blit(self._board_surf, (0, 0))
 
         self.number_of_results_text = self.font.render('Total Balls : ' + str(self.number_of_results), True,
-                                                       pygame.Color('white'))
+                                                       self.cp.white)
         self._display_surf.blit(self.number_of_results_text, (20, self.board_height + 10))
 
-        self.status_text = self.font.render(self.status_bar.current_status(), True, pygame.Color('darkgrey'))
+        self.status_text = self.font.render(self.status_bar.current_status(), True, self.cp.grey)
         self._display_surf.blit(self.status_text, (10, self.windowHeight - 30))
         if self.number_of_levels <= 20:
             bin_string = ' | '.join(['{:^2}'.format(tmp_bin.value) for tmp_bin in self.bins])
         else:
             bin_string = "Data only shown for <=20 levels"
 
-        self.bin_text = self.font2.render(bin_string, True, pygame.Color('white'))
+        self.bin_text = self.font2.render(bin_string, True, self.cp.white)
         bin_pos = (self.windowWidth / 2.0 - self.bin_text.get_width() / 2.0)
         self._display_surf.blit(self.bin_text, (bin_pos, 10))
 
         self.update_graph()
 
         for ball in self.balls:
-            pygame.draw.circle(self._display_surf, (255, 255, 255), (ball.x, ball.y), ball.radius)
+            pygame.draw.circle(self._display_surf, self.cp.ball, (ball.x, ball.y), ball.radius)
 
         for element in self.UIComponents:
             self.UIComponents[element].update()
@@ -390,25 +360,25 @@ class App:
         self.on_cleanup()
 
     def setup_pins(self, levels, total_radius):
-        self._board_surf.fill(pygame.Color("black"))
+        self._board_surf.fill(self.cp.black)
         self.pins = list()
         start_y = 80
         start_x = self.x_start
         x = start_x
         y = start_y
         for i in range(1, levels + 1):
-            tmplevel = list()
+            tmp_level = list()
             for j in range(0, i):
-                tmplevel.append(GaltonPin(x, y, self.pin_size))
+                tmp_level.append(GaltonPin(x, y, self.pin_size))
                 x += int(total_radius * 2)
-            self.pins.append(tmplevel)
+            self.pins.append(tmp_level)
             start_x -= total_radius
             start_y += total_radius * 2
             x = start_x
             y = start_y
         for i in range(0, self.number_of_levels):
             for pin in self.pins[i]:
-                pygame.draw.circle(self._board_surf, (100, 100, 100), (pin.x, pin.y), pin.radius)
+                pygame.draw.circle(self._board_surf, self.cp.pin, (pin.x, pin.y), pin.radius)
 
     def setup_graph(self, bins, total_radius):
         self.bins = list()
@@ -430,7 +400,7 @@ class App:
         if bin_max == 0:
             bin_max = 1
         for galtonBin in self.bins:
-            pygame.draw.rect(self._display_surf, (0, 128, 255), (galtonBin.x, self.board_height, galtonBin.width,
+            pygame.draw.rect(self._display_surf, self.cp.graph, (galtonBin.x, self.board_height, galtonBin.width,
                                                                  -1 * (125 / bin_max) * galtonBin.value))
 
     def collision_with_pin(self, ball):
@@ -535,6 +505,16 @@ class StatusBar:
             self._status_items.append(item)
         else:
             raise TypeError("StatusBar cannot add object of type {}.".format(type(item)))
+
+
+class ColourPalette:
+    white = pygame.Color('white')
+    black = pygame.Color('black')
+    grey = pygame.Color(120, 120, 120, 0)
+    red = pygame.Color(180, 5, 5, 0)
+    ball = pygame.Color('white')
+    graph = pygame.Color(0, 128, 255, 0)
+    pin = pygame.Color(100, 100, 100, 0)
 
 
 if __name__ == "__main__":
