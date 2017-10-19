@@ -18,11 +18,16 @@ class App:
     def __init__(self):
         # Config
         self.config_filename = 'GaltonBoard_config.ini'
-        self.config = {'logging_level': logging.DEBUG}
+        self.config = {'logging_level': 'DEBUG'}
+        self.config_error = None
         self.load_config()
 
         self.logger = None
         self.setup_logger()
+
+        if self.config_error is not None:
+            self.logger.error('Failed to load config file. Using defaults : ' + str(self.config_error)
+                              + " was searching for file : " + self.config_filename, exc_info=True)
 
         self.logger.info('__init__ started')
         self.board_height = 700
@@ -39,7 +44,7 @@ class App:
 
         pygame.init()
         self.font = pygame.font.Font(None, 24)
-        self.font2 = pygame.font.SysFont("Consolas", 12, )
+        self.font2 = pygame.font.SysFont("Consolas", 12)
 
         self.status_bar = StatusBar(pop_time=2)
 
@@ -73,8 +78,11 @@ class App:
         try:
             config.read(self.config_filename)
             for key in self.config:
-                self.config[key] = self.config_section_map(config, "Config")[key]
+                value_to_set = self.config_section_map(config, "Config")[key]
+                self.config[key] = value_to_set
         except Exception as e:
+            # Failed to read in config file, however defaults have already been set.
+            self.config_error = e
             pass
 
     def setup_logger(self):
@@ -247,10 +255,7 @@ class App:
         for option in options:
             try:
                 dict1[option] = config.get(section, option)
-                if dict1[option] == -1:
-                    print("skip: %s" % option)
             except Exception as e:
-                self.logger.error('config_section_map', e, exc_info=True)
                 dict1[option] = None
         return dict1
 
