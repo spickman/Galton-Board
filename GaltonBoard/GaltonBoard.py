@@ -177,11 +177,11 @@ class App:
                 self.status_bar.add_item("Saved Data")
                 self.logger.debug('Data saved success')
             else:
-                self.logger.error('No data to find in self.bins=', self.bins)
+                self.logger.error('No data to find in self.bins=' + str(self.bins))
         except FileExistsError:
             self.logger.error('The file exists and cannot be replaced')
         except Exception as e:
-            self.logger.error('Failed to save data', e, exc_info=True)
+            self.logger.error('Failed to save data : ' + str(e), exc_info=True)
 
     def setup_board(self):
         self.setup_pins(self.number_of_levels, self.total_radius)
@@ -226,15 +226,15 @@ class App:
         try:
             self.change_number_of_balls(float(self.config_section_map(config, "SectionOne")['number_of_balls']),
                                         set_value=True)
-            self.change_speed(float(self.config_section_map(config, "SectionOne")['delay_between_balls%']),
+            self.change_speed(float(self.config_section_map(config, "SectionOne")['ball_speed%'])/100,
                               set_value=True, percent=True)
-            self.change_delay_between_balls(float(self.config_section_map(config, "SectionOne")['ball_delay%']),
+            self.change_delay_between_balls(float(self.config_section_map(config, "SectionOne")['delay_between_balls%'])/100,
                                             set_value=True, percent=True)
             self.change_number_of_levels(float(self.config_section_map(config, "SectionOne")['number_of_levels']),
                                          set_value=True)
             self.logger.debug('Preset load completed')
         except Exception as e:
-            self.logger.error("Cannot load preset file", e, exc_info=True)
+            self.logger.error("Cannot load preset file : " + str(e), exc_info=True)
             self.status_bar.add_item('Bad config file : ' + filename)
 
     def load_preset_labels(self):
@@ -246,7 +246,7 @@ class App:
                 config.read(filename)
                 self.UIComponents[button].label = self.config_section_map(config, "SectionOne")['label']
         except Exception as e:
-            self.logger.error('Failed to load preset labels', e, exc_info=True)
+            self.logger.error('Failed to load preset labels : ' + str(e), exc_info=True)
             self.status_bar.add_item('Bad config file or button name')
 
     def config_section_map(self, config, section):
@@ -262,7 +262,6 @@ class App:
     def on_event(self, event):
         if event.type == QUIT:
             self._running = False
-
         for element in self.UIComponents:
             self.UIComponents[element].get_event(event)
 
@@ -335,7 +334,7 @@ class App:
                     self.UIComponents[slider].value = float(float(value_to_set)-minimum)/value_range
 
         except Exception as e:
-            self.logger.error('on_change failed', e, exc_info=True)
+            self.logger.error('on_change failed : ' + str(e), exc_info=True)
         if reverse and value_to_set:
             value_to_set = maximum - (value_to_set-minimum)
         return value_to_set
@@ -395,7 +394,7 @@ class App:
         self.update_graph()
 
         for ball in self.balls:
-            pygame.draw.circle(self._display_surf, ColourPalette.ball, (ball.x, ball.y), ball.radius)
+            pygame.draw.circle(self._display_surf, ball.colour, (ball.x, ball.y), ball.radius)
 
         for element in self.UIComponents:
             self.UIComponents[element].update()
@@ -496,6 +495,8 @@ class GaltonBin:
 
 
 class GaltonBall:
+    change_colour = False
+
     def __init__(self, total_radius):
         self.x = 300
         self.y = 50
@@ -510,9 +511,9 @@ class GaltonBall:
         self._setup_animation()
         self._animation_frame_length = len(self._animation_frames)
         self.birth_time = time.perf_counter()
+        self.colour = ColourPalette.ball
 
     def update(self, collision):
-
         if self._animation_frame_length < len(self._animation_frames):
             if self._animation_direction == 0:
                 self.x += self._animation_frames[self._animation_frame_length][0]
@@ -532,13 +533,18 @@ class GaltonBall:
             self.y += self.y_speed
 
     def _setup_animation(self):
-        prev_x_animation = 0
-        x_animation = np.sqrt(self.total_radius ** 2 - (self.total_radius - 0) ** 2)
-        for i in range(1, self.total_radius + 2, 1):
-            x_difference = x_animation - prev_x_animation
-            self._animation_frames.append((int(x_difference), 1))
-            prev_x_animation = x_animation - (x_difference - int(x_difference))
-            x_animation = np.sqrt(self.total_radius ** 2 - (self.total_radius - i) ** 2)
+        prev_animation = (0, 0)
+        animation = (0, 0)
+        for i in np.linspace(1, self.total_radius, self.total_radius/self.y_speed):
+            difference = np.subtract(animation, prev_animation)
+            self._animation_frames.append([int(a) for a in difference])
+            prev_animation = np.subtract(animation, np.subtract(difference, [int(a) for a in difference]))
+            animation = (np.sqrt(self.total_radius ** 2 - (self.total_radius - i) ** 2), i)
+        difference = np.subtract(animation, prev_animation)
+        self._animation_frames.append([int(a) for a in difference])
+        x = np.sum([a[0] for a in self._animation_frames])
+        y = np.sum([a[1] for a in self._animation_frames])
+        print("sum : " + str(x) + " : " + str(y))
 
 
 class GaltonPin:

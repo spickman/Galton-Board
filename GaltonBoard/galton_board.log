@@ -1,12 +1,30 @@
-2017-10-19 10:16:49,624 - __main__ - INFO - __init__ started
-2017-10-19 10:16:50,737 - __main__ - INFO - Resetting
-2017-10-19 10:16:50,738 - __main__ - INFO - Resetting
-2017-10-19 10:16:50,740 - __main__ - INFO - __init__ completed
-2017-10-19 10:16:50,740 - __main__ - INFO - Executing main loop
-2017-10-19 10:16:52,522 - __main__ - INFO - Resetting
-2017-10-19 10:16:52,523 - __main__ - INFO - Resetting
-2017-10-19 10:16:54,138 - __main__ - INFO - Resetting
-2017-10-19 10:16:54,139 - __main__ - INFO - Resetting
-2017-10-19 10:16:55,712 - __main__ - INFO - Resetting
-2017-10-19 10:16:55,714 - __main__ - INFO - Resetting
-2017-10-19 10:16:58,572 - __main__ - INFO - Cleanup
+2017-10-19 12:32:28,876 - __main__ - INFO - __init__ started
+2017-10-19 12:32:29,868 - __main__ - DEBUG - Setting up pins
+2017-10-19 12:32:29,869 - __main__ - DEBUG - Setting up graph
+2017-10-19 12:32:29,869 - __main__ - DEBUG - Setting up balls
+2017-10-19 12:32:29,869 - __main__ - DEBUG - Loading preset labels
+2017-10-19 12:32:29,872 - __main__ - DEBUG - preset3_command
+2017-10-19 12:32:29,872 - __main__ - DEBUG - Loading preset from : preset3config.ini
+2017-10-19 12:32:29,874 - __main__ - INFO - Resetting
+2017-10-19 12:32:29,875 - __main__ - DEBUG - Setting up pins
+2017-10-19 12:32:29,877 - __main__ - DEBUG - Setting up graph
+2017-10-19 12:32:29,877 - __main__ - DEBUG - Setting up balls
+2017-10-19 12:32:29,877 - __main__ - DEBUG - Preset load completed
+2017-10-19 12:32:29,877 - __main__ - INFO - Resetting
+2017-10-19 12:32:29,877 - __main__ - DEBUG - Setting up pins
+2017-10-19 12:32:29,878 - __main__ - DEBUG - Setting up graph
+2017-10-19 12:32:29,879 - __main__ - DEBUG - Setting up balls
+2017-10-19 12:32:29,879 - __main__ - INFO - __init__ completed
+2017-10-19 12:32:29,879 - __main__ - INFO - Executing main loop
+2017-10-19 12:32:31,565 - __main__ - DEBUG - preset1_command
+2017-10-19 12:32:31,566 - __main__ - DEBUG - Loading preset from : preset1config.ini
+2017-10-19 12:32:31,567 - __main__ - INFO - Resetting
+2017-10-19 12:32:31,567 - __main__ - DEBUG - Setting up pins
+2017-10-19 12:32:31,568 - __main__ - DEBUG - Setting up graph
+2017-10-19 12:32:31,568 - __main__ - DEBUG - Setting up balls
+2017-10-19 12:32:31,568 - __main__ - DEBUG - Preset load completed
+2017-10-19 12:32:31,568 - __main__ - INFO - Resetting
+2017-10-19 12:32:31,568 - __main__ - DEBUG - Setting up pins
+2017-10-19 12:32:31,569 - __main__ - DEBUG - Setting up graph
+2017-10-19 12:32:31,569 - __main__ - DEBUG - Setting up balls
+2017-10-19 12:32:39,244 - __main__ - INFO - Cleanup
