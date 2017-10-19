@@ -1,5 +1,7 @@
 import pygame
 import numpy as np
+from scipy.stats import norm
+
 import random
 import time
 from pygame.locals import *
@@ -53,7 +55,7 @@ class App:
         self.bins = None
         self.unpause_number_of_balls = None
         self.UIComponents = None
-
+        self.is_normal_visible = False
         self.paused = False
 
         pygame.display.set_caption('Galton Board')
@@ -65,6 +67,8 @@ class App:
         self.delta_time_step = 0.03
 
         self.number_of_results = 0
+
+        self.statistics = None
 
         self.preset_filenames = ['preset1config.ini', 'preset2config.ini', 'preset3config.ini']
         self.create_ui_elements()
@@ -138,6 +142,10 @@ class App:
         self.UIComponents['SaveDataButton'] = Button((800, self.board_height + 70, 100, 20),
                                                      command=self.save_data_command, label="Save Data")
 
+        self.UIComponents['NormalToggle'] = Button((800, self.board_height + 100, 100, 20),
+                                                   command=self.toggle_normal, label="Normal", latching_label="Normal",
+                                                   active_color=ColourPalette.red)
+
         self.UIComponents['level_slider'] = Slider((550, self.board_height + 10, 100, 20),
                                                    command=self.level_slider_command)
 
@@ -149,6 +157,12 @@ class App:
 
         self.UIComponents['delay_slider'] = Slider((550, self.board_height + 100, 100, 20),
                                                    command=self.delay_slider_command)
+
+    def toggle_normal(self):
+        if self.is_normal_visible:
+            self.is_normal_visible = False
+        else:
+            self.is_normal_visible = True
 
     def pause_command(self):
         if self.paused:
@@ -187,6 +201,7 @@ class App:
         self.setup_pins(self.number_of_levels, self.total_radius)
         self.setup_graph(self.number_of_levels + 1, self.total_radius)
         self.setup_balls()
+        self.statistics = None
 
     def reset_command(self):
         self.logger.info('Resetting')
@@ -228,8 +243,9 @@ class App:
                                         set_value=True)
             self.change_speed(float(self.config_section_map(config, "SectionOne")['ball_speed%'])/100,
                               set_value=True, percent=True)
-            self.change_delay_between_balls(float(self.config_section_map(config, "SectionOne")['delay_between_balls%'])/100,
-                                            set_value=True, percent=True)
+            self.change_delay_between_balls(
+                float(self.config_section_map(config, "SectionOne")['delay_between_balls%']) / 100,
+                set_value=True, percent=True)
             self.change_number_of_levels(float(self.config_section_map(config, "SectionOne")['number_of_levels']),
                                          set_value=True)
             self.logger.debug('Preset load completed')
@@ -391,6 +407,14 @@ class App:
         bin_pos = (self.windowWidth / 2.0 - bin_text.get_width() / 2.0)
         self._display_surf.blit(bin_text, (bin_pos, 10))
 
+        if self.statistics and self.is_normal_visible:
+            stat_string = ("Mean : " + str(round(self.statistics[0], 2)),
+                           "StdDev : " + str(round(self.statistics[1], 2)),
+                           "Unexplained data : " + str(("{:3.2f}%".format(self.statistics[2]))))
+            for i, stat in enumerate(stat_string):
+                stat_text = self.font2.render(stat, True, ColourPalette.white)
+                self._display_surf.blit(stat_text, (20, 30 + 20*i))
+
         self.update_graph()
 
         for ball in self.balls:
@@ -427,7 +451,6 @@ class App:
                 accumulator -= self.delta_time_step
                 t += self.delta_time_step
             self.on_render()
-
         self.on_cleanup()
 
     def setup_pins(self, levels, total_radius):
@@ -461,20 +484,64 @@ class App:
             x -= total_radius
 
         for i in range(0, bins):
-            tmpbin = GaltonBin()
-            tmpbin.trigger = x
-            tmpbin.width = total_radius * 2
-            tmpbin.x = x - total_radius
-            self.bins.append(tmpbin)
+            tmp_bin = GaltonBin()
+            tmp_bin.trigger = x
+            tmp_bin.width = total_radius * 2
+            tmp_bin.x = x - total_radius
+            self.bins.append(tmp_bin)
             x += total_radius * 2
 
     def update_graph(self):
-        bin_max = max(tmp_bin.value for tmp_bin in self.bins)
+        bin_values = [tmp_bin.value for tmp_bin in self.bins]
+        bin_max = max(bin_values)
         if bin_max == 0:
             bin_max = 1
-        for galtonBin in self.bins:
-            pygame.draw.rect(self._display_surf, ColourPalette.graph, (galtonBin.x, self.board_height, galtonBin.width,
-                                                                       -1 * (125 / bin_max) * galtonBin.value))
+        if self.number_of_results:
+            for galtonBin in self.bins:
+                pygame.draw.rect(self._display_surf,
+                                 ColourPalette.graph,
+                                 (galtonBin.x, self.board_height, galtonBin.width,
+                                  -150 * (galtonBin.value / bin_max)))
+        if self.is_normal_visible and self.number_of_results > 1:
+            try:
+                number_of_bins = self.number_of_levels + 1
+                normal_x_axis = np.subtract(range(0, number_of_bins), self.number_of_levels/2)
+                mean_estimate = np.sum(np.multiply(normal_x_axis, bin_values))/self.number_of_results
+                std_estimate = np.sqrt(np.sum(np.multiply(normal_x_axis, np.multiply(normal_x_axis, bin_values)))
+                                       / self.number_of_results - mean_estimate * mean_estimate)
+                unexplained_data_percent = np.sum(
+                    np.abs(
+                        np.subtract(bin_values,
+                                    np.multiply(norm.pdf(normal_x_axis, loc=mean_estimate, scale=std_estimate),
+                                                self.number_of_results))))\
+                                           * 100 / self.number_of_results
+
+                self.statistics = (mean_estimate, std_estimate, unexplained_data_percent)
+                if not np.isnan(mean_estimate) and not np.isnan(std_estimate) and std_estimate > 0:
+                    norm_max = norm.pdf(0, loc=0, scale=std_estimate)
+                    for x_point, norm_point in zip(np.linspace(self.bins[0].x+self.bins[0].width/2,
+                                                               self.bins[-1].x+self.bins[-1].width/2,
+                                                               (number_of_bins*2)),
+                                                   np.linspace(-0.5*(self.number_of_levels+1),
+                                                               0.5*(self.number_of_levels+1),
+                                                               (number_of_bins*2))):
+                        pygame.draw.circle(self._display_surf,
+                                           ColourPalette.red,
+                                           (int(x_point),
+                                            int(self.board_height-150*norm.pdf(norm_point,
+                                                                               loc=mean_estimate,
+                                                                               scale=std_estimate)/norm_max)),
+                                           3)
+
+                    # points = [(x_point, norm_point) for x_point, norm_point
+                        # in zip(np.linspace(self.bins[0].x+self.bins[0].width/2,
+                        #  self.bins[-1].x+self.bins[-1].width/2,
+                        #  (number_of_bins*2)),
+                        #  np.linspace(-0.5*(self.number_of_levels+1),
+                        #  0.5*(self.number_of_levels+1), (number_of_bins)*2))]
+                    # pygame.draw.lines(self._display_surf, ColourPalette.red, False, points, 2)
+            except Exception as e:
+                self.logger.error("Calculation of Normal statistics has failed with error : " + str(e), exc_info=True)
 
     def collision_with_pin(self, ball):
         if ball.level < self.number_of_levels:
@@ -512,6 +579,8 @@ class GaltonBall:
         self._animation_frame_length = len(self._animation_frames)
         self.birth_time = time.perf_counter()
         self.colour = ColourPalette.ball
+        # For fun
+        # self.colour = pygame.Color(random.randint(0,255), random.randint(0,255), random.randint(0,255),255)
 
     def update(self, collision):
         if self._animation_frame_length < len(self._animation_frames):
@@ -542,9 +611,6 @@ class GaltonBall:
             animation = (np.sqrt(self.total_radius ** 2 - (self.total_radius - i) ** 2), i)
         difference = np.subtract(animation, prev_animation)
         self._animation_frames.append([int(a) for a in difference])
-        x = np.sum([a[0] for a in self._animation_frames])
-        y = np.sum([a[1] for a in self._animation_frames])
-        print("sum : " + str(x) + " : " + str(y))
 
 
 class GaltonPin:
