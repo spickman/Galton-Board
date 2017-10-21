@@ -46,7 +46,7 @@ class App:
 
         pygame.init()
         self.font = pygame.font.Font(None, 24)
-        self.font2 = pygame.font.SysFont("Consolas", 12)
+        self.font2 = pygame.font.SysFont("Consolas", 20)
 
         self.status_bar = StatusBar(pop_time=2)
 
