@@ -1,30 +1,20 @@
-2019-05-06 12:09:30,873 - __main__ - INFO - __init__ started
-2019-05-06 12:09:30,954 - __main__ - DEBUG - Setting up pins
-2019-05-06 12:09:30,955 - __main__ - DEBUG - Setting up graph
-2019-05-06 12:09:30,955 - __main__ - DEBUG - Setting up balls
-2019-05-06 12:09:30,955 - __main__ - DEBUG - Loading preset labels
-2019-05-06 12:09:30,956 - __main__ - DEBUG - preset3_command
-2019-05-06 12:09:30,956 - __main__ - DEBUG - Loading preset from : config/preset3config.ini
-2019-05-06 12:09:30,956 - __main__ - INFO - Resetting
-2019-05-06 12:09:30,956 - __main__ - DEBUG - Setting up pins
-2019-05-06 12:09:30,957 - __main__ - DEBUG - Setting up graph
-2019-05-06 12:09:30,957 - __main__ - DEBUG - Setting up balls
-2019-05-06 12:09:30,957 - __main__ - DEBUG - Preset load completed
-2019-05-06 12:09:30,957 - __main__ - INFO - Resetting
-2019-05-06 12:09:30,957 - __main__ - DEBUG - Setting up pins
-2019-05-06 12:09:30,958 - __main__ - DEBUG - Setting up graph
-2019-05-06 12:09:30,958 - __main__ - DEBUG - Setting up balls
-2019-05-06 12:09:30,958 - __main__ - INFO - __init__ completed
-2019-05-06 12:09:30,958 - __main__ - INFO - Executing main loop
-2019-05-06 12:10:00,655 - __main__ - DEBUG - preset1_command
-2019-05-06 12:10:00,655 - __main__ - DEBUG - Loading preset from : config/preset1config.ini
-2019-05-06 12:10:00,655 - __main__ - INFO - Resetting
-2019-05-06 12:10:00,655 - __main__ - DEBUG - Setting up pins
-2019-05-06 12:10:00,656 - __main__ - DEBUG - Setting up graph
-2019-05-06 12:10:00,656 - __main__ - DEBUG - Setting up balls
-2019-05-06 12:10:00,656 - __main__ - DEBUG - Preset load completed
-2019-05-06 12:10:00,656 - __main__ - INFO - Resetting
-2019-05-06 12:10:00,656 - __main__ - DEBUG - Setting up pins
-2019-05-06 12:10:00,657 - __main__ - DEBUG - Setting up graph
-2019-05-06 12:10:00,657 - __main__ - DEBUG - Setting up balls
-2019-05-06 12:10:06,608 - __main__ - INFO - Cleanup
+2019-05-06 13:29:56,018 - __main__ - INFO - __init__ started
+2019-05-06 13:29:56,107 - __main__ - DEBUG - Setting up pins
+2019-05-06 13:29:56,108 - __main__ - DEBUG - Setting up graph
+2019-05-06 13:29:56,108 - __main__ - DEBUG - Setting up balls
+2019-05-06 13:29:56,108 - __main__ - DEBUG - Loading preset labels
+2019-05-06 13:29:56,109 - __main__ - DEBUG - preset3_command
+2019-05-06 13:29:56,109 - __main__ - DEBUG - Loading preset from : config/preset3config.ini
+2019-05-06 13:29:56,109 - __main__ - INFO - Resetting
+2019-05-06 13:29:56,109 - __main__ - DEBUG - Setting up pins
+2019-05-06 13:29:56,110 - __main__ - DEBUG - Setting up graph
+2019-05-06 13:29:56,110 - __main__ - DEBUG - Setting up balls
+2019-05-06 13:29:56,110 - __main__ - DEBUG - Preset load completed
+2019-05-06 13:29:56,110 - __main__ - INFO - Resetting
+2019-05-06 13:29:56,110 - __main__ - DEBUG - Setting up pins
+2019-05-06 13:29:56,111 - __main__ - DEBUG - Setting up graph
+2019-05-06 13:29:56,111 - __main__ - DEBUG - Setting up balls
+2019-05-06 13:29:56,111 - __main__ - INFO - __init__ completed
+2019-05-06 13:29:56,111 - __main__ - INFO - Executing main loop
+2019-05-06 13:29:59,866 - __main__ - DEBUG - Setting up pins
+2019-05-06 13:30:06,578 - __main__ - INFO - Cleanup

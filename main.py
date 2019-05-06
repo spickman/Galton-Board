@@ -4,7 +4,9 @@ from scipy.stats import norm
 
 import random
 import time
-from pygame.locals import *
+import pygame
+
+# from pygame.locals import *
 from utilities.textbox import TextBox
 from utilities.button import Button
 from utilities.slider import Slider
@@ -14,10 +16,12 @@ import logging
 
 
 class App:
-    windowWidth = 1000
-    windowHeight = 850
-
+    
     def __init__(self):
+        self.windowWidth = 1000
+        self.windowHeight = 850
+        self.aspect_ratio = self.windowWidth / self.windowHeight
+
         # Config
         self.config_filename = "config/config.ini"
         self.config = {"logging_level": "DEBUG"}
@@ -37,19 +41,12 @@ class App:
             )
 
         self.logger.info("__init__ started")
-        self.board_height = 700
-        self.ball_x_start = int(self.windowWidth / 2)
         self.ball_y_start = 50
         self._running = True
 
         self.pin_radius = 8
         tmp_ball = GaltonBall(1)
         self.total_radius = self.pin_radius + tmp_ball.radius
-
-        self._board_surf = pygame.Surface((self.windowWidth, self.board_height))
-        self._display_surf = pygame.display.set_mode(
-            (self.windowWidth, self.windowHeight)
-        )
 
         pygame.init()
         self.font = pygame.font.Font(None, 24)
@@ -83,11 +80,24 @@ class App:
             "preset3config.ini",
         ]
         self.preset_filenames = ["config/" + x for x in self.preset_filenames]
-        self.create_ui_elements()
-        self.setup_board()
+
+        
+        self.draw_board() 
+        self.setup_graph(self.number_of_levels + 1, self.total_radius)
+        self.setup_balls()
         self.load_preset_labels()
         self.preset3_command()
         self.logger.info("__init__ completed")
+
+    def draw_board(self):
+        self._display_surf = pygame.display.set_mode(
+            (self.windowWidth, self.windowHeight), flags=pygame.RESIZABLE
+        )
+        self.board_height = self.windowHeight - 150 
+        self.ball_x_start = int(self.windowWidth / 2)
+        self._board_surf = pygame.Surface((self.windowWidth, self.board_height))
+        self.create_ui_elements()
+        self.setup_pins(self.number_of_levels, self.total_radius)
 
     def load_config(self):
         config = configparser.ConfigParser()
@@ -116,8 +126,13 @@ class App:
 
     def create_ui_elements(self):
         self.UIComponents = dict()
+        textbox_width = 50
+        centered = self.windowWidth / 2 - textbox_width /2
+        r2_centered = centered + textbox_width/2 + 300
+        r_centered = centered + textbox_width/2 + 175
+        s_centered = centered + textbox_width/2 + 50 
         self.UIComponents["ball_input"] = TextBox(
-            (475, self.board_height + 40, 50, 20),
+            (centered, self.board_height + 40, textbox_width, 20),
             command=self.change_number_of_balls,
             clear_on_enter=False,
             inactive_on_enter=False,
@@ -125,7 +140,7 @@ class App:
         )
 
         self.UIComponents["delay_input"] = TextBox(
-            (475, self.board_height + 100, 50, 20),
+            (centered, self.board_height + 100, textbox_width, 20),
             command=self.change_delay_between_balls,
             clear_on_enter=False,
             inactive_on_enter=False,
@@ -134,7 +149,7 @@ class App:
         )
 
         self.UIComponents["level_input"] = TextBox(
-            (475, self.board_height + 10, 50, 20),
+            (centered, self.board_height + 10, textbox_width, 20),
             command=self.change_number_of_levels,
             clear_on_enter=False,
             inactive_on_enter=False,
@@ -142,7 +157,7 @@ class App:
         )
 
         self.UIComponents["speed_input"] = TextBox(
-            (475, self.board_height + 70, 50, 20),
+            (centered, self.board_height + 70, textbox_width, 20),
             command=self.change_speed,
             clear_on_enter=False,
             inactive_on_enter=False,
@@ -151,13 +166,13 @@ class App:
         )
 
         self.UIComponents["ResetButton"] = Button(
-            (800, self.board_height + 40, 100, 20),
+            (r2_centered, self.board_height + 40, 100, 20),
             command=self.reset_command,
             label="Reset",
         )
 
         self.UIComponents["PauseButton"] = Button(
-            (800, self.board_height + 10, 100, 20),
+            (r2_centered, self.board_height + 10, 100, 20),
             command=self.pause_command,
             label="Pause",
             latching_label="Continue",
@@ -165,31 +180,31 @@ class App:
         )
 
         self.UIComponents["Preset1Button"] = Button(
-            (675, self.board_height + 10, 100, 20),
+            (r_centered, self.board_height + 10, 100, 20),
             command=self.preset1_command,
             label="Preset1",
         )
 
         self.UIComponents["Preset2Button"] = Button(
-            (675, self.board_height + 40, 100, 20),
+            (r_centered, self.board_height + 40, 100, 20),
             command=self.preset2_command,
             label="Preset2",
         )
 
         self.UIComponents["Preset3Button"] = Button(
-            (675, self.board_height + 70, 100, 20),
+            (r_centered, self.board_height + 70, 100, 20),
             command=self.preset3_command,
             label="Preset3",
         )
 
         self.UIComponents["SaveDataButton"] = Button(
-            (800, self.board_height + 70, 100, 20),
+            (r2_centered, self.board_height + 70, 100, 20),
             command=self.save_data_command,
             label="Save Data",
         )
 
         self.UIComponents["NormalToggle"] = Button(
-            (800, self.board_height + 100, 100, 20),
+            (r2_centered, self.board_height + 100, 100, 20),
             command=self.toggle_normal,
             label="Normal",
             latching_label="Normal",
@@ -197,19 +212,19 @@ class App:
         )
 
         self.UIComponents["level_slider"] = Slider(
-            (550, self.board_height + 10, 100, 20), command=self.level_slider_command
+            (s_centered, self.board_height + 10, 100, 20), command=self.level_slider_command
         )
 
         self.UIComponents["ball_slider"] = Slider(
-            (550, self.board_height + 40, 100, 20), command=self.ball_slider_command
+            (s_centered, self.board_height + 40, 100, 20), command=self.ball_slider_command
         )
 
         self.UIComponents["speed_slider"] = Slider(
-            (550, self.board_height + 70, 100, 20), command=self.speed_slider_command
+            (s_centered, self.board_height + 70, 100, 20), command=self.speed_slider_command
         )
 
         self.UIComponents["delay_slider"] = Slider(
-            (550, self.board_height + 100, 100, 20), command=self.delay_slider_command
+            (s_centered, self.board_height + 100, 100, 20), command=self.delay_slider_command
         )
 
     def toggle_normal(self):
@@ -368,9 +383,29 @@ class App:
                 dict1[option] = None
         return dict1
 
+    def handle_resize(self, event):
+        if abs(event.w - self.windowWidth) > 50 or abs(event.h - self.windowHeight) > 50:
+            self.windowWidth = event.w
+            self.windowHeight = event.h
+        else:
+            return
+
+        pygame.display.set_mode(
+            (self.windowWidth, self.windowHeight), flags=pygame.RESIZABLE
+        )
+        self.board_height = self.windowHeight - 150 
+        self.ball_x_start = int(self.windowWidth / 2)
+        self._board_surf = pygame.Surface((self.windowWidth, self.board_height))
+        self.create_ui_elements()
+        self.setup_pins(self.number_of_levels, self.total_radius)
+
     def on_event(self, event):
-        if event.type == QUIT:
+        if event.type == pygame.QUIT:
             self._running = False
+            return 
+        if event.type == pygame.VIDEORESIZE:
+            self.handle_resize(event)
+            return 
         for element in self.UIComponents:
             self.UIComponents[element].get_event(event)
 
@@ -594,7 +629,6 @@ class App:
             current_time = time.perf_counter()
 
             accumulator += frame_time
-
             for event in pygame.event.get():
                 self.on_event(event)
 
