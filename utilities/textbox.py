@@ -1,11 +1,11 @@
 import string
 import pygame as pg
 
-ACCEPTED = string.ascii_letters+string.digits+string.punctuation+" "
+ACCEPTED = string.ascii_letters + string.digits + string.punctuation + " "
 
 
 class TextBox(object):
-    def __init__(self,rect,**kwargs):
+    def __init__(self, rect, **kwargs):
         self.rect = pg.Rect(rect)
         self.buffer = []
         self.final = None
@@ -19,21 +19,22 @@ class TextBox(object):
         self.blink_timer = 0.0
         self.process_kwargs(kwargs)
 
-    def process_kwargs(self,kwargs):
-        defaults = {"id" : None,
-                    "command" : None,
-                    "active" : False,
-                    "color" : pg.Color("white"),
-                    "font_color" : pg.Color("black"),
-                    "outline_color" : pg.Color("black"),
-                    "outline_width" : 2,
-                    "active_color" : pg.Color("grey"),
-                    "font" : pg.font.Font(None, self.rect.height+4),
-                    "clear_on_enter" : False,
-                    "percentage" : False,
-                    "inactive_on_enter" : True,
-                    "label" : None
-                    }
+    def process_kwargs(self, kwargs):
+        defaults = {
+            "id": None,
+            "command": None,
+            "active": False,
+            "color": pg.Color("white"),
+            "font_color": pg.Color("black"),
+            "outline_color": pg.Color("black"),
+            "outline_width": 2,
+            "active_color": pg.Color("grey"),
+            "font": pg.font.Font(None, self.rect.height + 4),
+            "clear_on_enter": False,
+            "percentage": False,
+            "inactive_on_enter": True,
+            "label": None,
+        }
         for kwarg in kwargs:
             if kwarg in defaults:
                 defaults[kwarg] = kwargs[kwarg]
@@ -43,7 +44,7 @@ class TextBox(object):
 
     def get_event(self, event):
         if event.type == pg.KEYDOWN and self.active:
-            if event.key in (pg.K_RETURN,pg.K_KP_ENTER):
+            if event.key in (pg.K_RETURN, pg.K_KP_ENTER):
                 self.execute()
             elif event.key == pg.K_BACKSPACE:
                 if self.buffer:
@@ -55,7 +56,11 @@ class TextBox(object):
 
     def execute(self):
         if self.command:
-            self.command(float(self.final)/100 if self.percentage else self.final, set_value=True, percent=self.percentage)
+            self.command(
+                float(self.final) / 100 if self.percentage else self.final,
+                set_value=True,
+                percent=self.percentage,
+            )
         self.active = not self.inactive_on_enter
         if self.clear_on_enter:
             self.buffer = []
@@ -65,39 +70,51 @@ class TextBox(object):
         if new != self.final:
             self.final = new
 
-            self.rendered = self.font.render(self.final if not self.percentage else self.final + "%", True, self.font_color)
-            self.render_rect = self.rendered.get_rect(x=self.rect.x+2, centery=self.rect.centery)
+            self.rendered = self.font.render(
+                self.final if not self.percentage else self.final + "%",
+                True,
+                self.font_color,
+            )
+            self.render_rect = self.rendered.get_rect(
+                x=self.rect.x + 2, centery=self.rect.centery
+            )
 
-
-            if self.render_rect.width > self.rect.width-6:
-                offset = self.render_rect.width-(self.rect.width-6)
-                self.render_area = pg.Rect(offset, 0, self.rect.width-6, self.render_rect.height)
+            if self.render_rect.width > self.rect.width - 6:
+                offset = self.render_rect.width - (self.rect.width - 6)
+                self.render_area = pg.Rect(
+                    offset, 0, self.rect.width - 6, self.render_rect.height
+                )
             else:
                 self.render_area = self.rendered.get_rect(topleft=(0, 0))
 
             if self.label:
-                self.rendered_label = self.font.render(self.label, True, pg.Color('white'))
-                self.render_rect_label = self.rendered_label.get_rect(x=self.rect.x - self.rendered_label.get_width()-10, centery=self.rect.centery)
+                self.rendered_label = self.font.render(
+                    self.label, True, pg.Color("white")
+                )
+                self.render_rect_label = self.rendered_label.get_rect(
+                    x=self.rect.x - self.rendered_label.get_width() - 10,
+                    centery=self.rect.centery,
+                )
                 self.render_area_label = self.rendered_label.get_rect(topleft=(0, 0))
 
-
-        if pg.time.get_ticks()-self.blink_timer > 200:
+        if pg.time.get_ticks() - self.blink_timer > 200:
             self.blink = not self.blink
             self.blink_timer = pg.time.get_ticks()
 
     def draw(self, surface):
         outline_color = self.active_color if self.active else self.outline_color
-        outline = self.rect.inflate(self.outline_width*2, self.outline_width*2)
+        outline = self.rect.inflate(self.outline_width * 2, self.outline_width * 2)
         surface.fill(outline_color, outline)
         surface.fill(self.color, self.rect)
         if self.rendered:
             surface.blit(self.rendered, self.render_rect, self.render_area)
 
         if self.rendered_label:
-            surface.blit(self.rendered_label, self.render_rect_label, self.render_area_label)
+            surface.blit(
+                self.rendered_label, self.render_rect_label, self.render_area_label
+            )
 
         if self.blink and self.active:
             curse = self.render_area.copy()
             curse.topleft = self.render_rect.topleft
-            surface.fill(self.font_color, (curse.right+1, curse.y, 2, curse.h))
-
+            surface.fill(self.font_color, (curse.right + 1, curse.y, 2, curse.h))
