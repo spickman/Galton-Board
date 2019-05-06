@@ -384,7 +384,7 @@ class App:
         return dict1
 
     def handle_resize(self, event):
-        if abs(event.w - self.windowWidth) > 50 or abs(event.h - self.windowHeight) > 50:
+        if abs(event.w - self.windowWidth) > 10 or abs(event.h - self.windowHeight) > 10:
             self.windowWidth = event.w
             self.windowHeight = event.h
         else:
